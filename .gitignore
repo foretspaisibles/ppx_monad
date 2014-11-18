@@ -1,0 +1,6 @@
+tags
+*.o
+*.byte
+*.native
+*.cm[ioxt]
+*.cmti
