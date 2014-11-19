@@ -1,56 +1,67 @@
 # ppx_monad
 
-ppx_monad is Haskell-style monad syntax extension for OCaml.
+ppx_monad is a monad syntax extension for OCaml, that provides two
+major monad syntaxes: clean but incomplete Haskell-style monad syntax
+and verbose but complete let monad syntax.
 
-With ppx_monad, sequence expressions (i.e. `e1; e2`) with
-`[%monad ...]` extension will be transformed according to the
-following rules:
+## Haskell-style monad syntax
 
-1. `e; ...` turns into `bind e (fun _ -> ...)`
-2. `v <-- e; ...` turns into `bind e (fun v -> ...)`
-
-For example, the following expression
+To use this syntax, you need to wrap a sequence expression (i.e. `e1;
+e2`) with `[%monad ...]` extension.
 
 ```OCaml
-[%monad a <- f (); g a]
+[%monad
+  a <- [1; 2; 3];
+  b <- [3; 4; 5];
+  return (a + b)]
 ```
 
-will be transformed into
+`v <- e` binds a monadic value of `e` to a variable `v`.  Compared to
+Haskell monad syntax, there is a serious limitation that you cannot
+put a pattern in the place of `v`.
 
-```OCaml
-bind (f ()) (fun a -> g a)
-```
-
-OCaml keywords below with `%monad` extension will also be transformed
-in a natural manner.
-
-* `begin`
-
-## Example
-
-In a list monad, the following code
+Sequence expressions in `begin ... end` are also supported.
 
 ```OCaml
 begin%monad
-  a <-- [1; 2; 3];
-  b <-- [3; 4; 5];
+  a <- [1; 2; 3];
+  b <- [3; 4; 5];
   return (a + b)
 end
 ```
 
-outputs
+The transformation rule is very natural as follows.
 
+1. `e; ...` turns into `bind e (fun _ -> ...)`
+2. `v <- e; ...` turns into `bind e (fun v -> ...)`
+
+## Let monad syntax
+
+This syntax is somewhat verbose than Haskell-style monad syntax but
+complete: You can use patterns at the left hand side of `<-`.
+
+To use this syntax, you need to wrap or annotate a `let` expression
+with `[%monad ...]` extension.
+
+Wrap version:
+
+```OCaml
+[%monad
+  let a, b = [1, 2; 3, 4]
+  and c, d = [5, 6; 7, 8]
+  in return (a * c + b * d)]
 ```
-4
-5
-6
-5
-6
-7
-6
-7
-8
+
+Annotate version:
+
+```OCaml
+let%monad
+  a, b = [1, 2; 3, 4] and
+  c, d = [5, 6; 7, 8] in
+return (a * c + b * d)
 ```
+
+The transformation rule is trivial.
 
 ## License
 
