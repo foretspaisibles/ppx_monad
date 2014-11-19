@@ -15,3 +15,15 @@ let () =
   List.iter
     (fun a -> Format.printf "%d@." a)
     result
+
+let () =
+  let result =
+    let open List_monad in
+    let%monad
+      a, b = [1, 2; 3, 4] and
+      c, d = [5, 6; 7, 8] in
+    return (a * c + b * d)
+  in
+  List.iter
+    (fun a -> Format.printf "%d@." a)
+    result
