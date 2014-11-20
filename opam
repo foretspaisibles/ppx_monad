@@ -1,0 +1,11 @@
+opam-version: "1"
+maintainer: "m2ym.pub@gmail.com"
+build: [
+  [make]
+  [make "install"]
+]
+remove: [["ocamlfind" "remove" "ppx_monad"]]
+depends: [
+  "ocamlfind" {>= "1.5.2"}
+]
+ocaml-version: [>= "4.02.0"]

@@ -1,0 +1,4 @@
+name = "ppx_monad"
+version = "0.0.1"
+description = "A monad syntax extension"
+ppx = "./ppx_monad.native"
