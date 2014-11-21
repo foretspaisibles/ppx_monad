@@ -32,8 +32,8 @@ end
 
 The transformation rule is very natural as follows.
 
-1. `e; ...` turns into `bind e (fun _ -> ...)`
-2. `v <- e; ...` turns into `bind e (fun v -> ...)`
+1. `e; ...` turns into `e >>= fun _ -> ...`
+2. `v <- e; ...` turns into `e >>= fun v -> ...`
 
 ## Let monad syntax
 

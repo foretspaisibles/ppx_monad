@@ -1,6 +1,6 @@
 module List_monad = struct
   let return a = [a]
-  let bind t f = List.concat (List.map f t)
+  let (>>=) t f = List.concat (List.map f t)
 end
 
 let () =

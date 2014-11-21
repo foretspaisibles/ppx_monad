@@ -4,6 +4,7 @@ let mapper _args =
   let open Longident in
   let open Ast_mapper in
   let open Ast_helper in
+  let bind_exp = (Exp.ident { txt = Lident ">>="; loc = Location.none }) in
   let super = default_mapper in
   { super with
     expr =
@@ -15,11 +16,11 @@ let mapper _args =
                let rec loop e = match e.pexp_desc with
                  | Pexp_sequence ({ pexp_desc = Pexp_setinstvar (var, e1) }, e2) ->
                    Exp.apply
-                     (Exp.ident { txt = Lident "bind"; loc = Location.none })
+                     bind_exp
                      ["", e1; "", Exp.fun_ "" None (Pat.var var) (loop e2)]
                  | Pexp_sequence (e1, e2) ->
                    Exp.apply
-                     (Exp.ident { txt = Lident "bind"; loc = Location.none })
+                     bind_exp
                      ["", e1; "", Exp.fun_ "" None (Pat.any ()) (loop e2)]
                  | _ ->
                    super.expr this e
@@ -28,7 +29,7 @@ let mapper _args =
                List.fold_right
                  (fun { pvb_pat = pat; pvb_expr = expr } acc ->
                     Exp.apply
-                      (Exp.ident { txt = Lident "bind"; loc = Location.none })
+                      bind_exp
                       ["", expr; "", Exp.fun_ "" None pat acc])
                  bindings
                  e
