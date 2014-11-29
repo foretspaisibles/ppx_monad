@@ -1,5 +1,5 @@
 .PHONY: all
-all: src/ppx_monad.native
+all: src/ppx_monad.byte src/ppx_monad.native
 
 .PHONY: test
 test: run-examples
@@ -15,6 +15,9 @@ install: src/ppx_monad.native
 .PHONY: uninstall
 uninstall:
 	ocamlfind remove ppx_monad
+
+src/ppx_monad.byte: src/ppx_monad.ml
+	ocamlfind ocamlc -package compiler-libs.common -linkpkg -o $@ $<
 
 src/ppx_monad.native: src/ppx_monad.ml
 	ocamlfind ocamlopt -package compiler-libs.common -linkpkg -o $@ $<

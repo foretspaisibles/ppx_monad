@@ -95,6 +95,36 @@ return (a * c + b * d)
 
 The transformation rule is trivial.
 
+## Shorthand for local open
+
+You can use arbitrary monad modules without `open ...` or `let open
+... in`, by appending monad module name after `%monad`.
+
+For example, the following code
+
+```OCaml
+begin%monad.List
+  x <- [1; 2; 3];
+  y <- [3; 4; 5];
+  return (x + y)
+end
+```
+
+will be tranformed into
+
+```OCaml
+let (>>=) = List.(>>=)
+and return = List.return
+in
+[1; 2; 3]
+>>= fun x -> [3; 4; 5]
+>>= fun y -> return (x + y)
+```
+
+## Examples
+
+See `examples` directory.
+
 ## License
 
 MIT License

@@ -54,8 +54,7 @@ let () =
 
 (* Toplevel let *)
 module M = struct
-  let%monad f xs ys =
-    let open List_monad in
+  let%monad.List_monad f xs ys =
     x <- xs;
     y <- ys;
     return (x + y)
