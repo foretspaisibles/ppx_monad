@@ -50,3 +50,16 @@ let () =
       return (x + y)
   in
   output (fibm 10)
+
+(* Toplevel let *)
+module M = struct
+  open List_monad
+
+  let%monad f xs ys =
+    x <- xs;
+    y <- ys;
+    return (x + y)
+
+  let () =
+    output (f [1; 2; 3] [3; 4; 5])
+end

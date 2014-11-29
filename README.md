@@ -20,11 +20,16 @@ e2`) with `[%monad ...]` extension.
 Haskell monad syntax, there is a serious limitation that you cannot
 put a pattern in the place of `v`.
 
-Sequence expressions in `begin ... end`, `fun` and `function` are also
-supported.
+The following keywords also support sequence expressions in their
+body.
+
+* `begin`
+* `fun`
+* `function`
+* Toplevel `let`
 
 ```OCaml
-(* begin ... end *)
+(* begin *)
 begin%monad
   x <- [1; 2; 3];
   y <- [3; 4; 5];
@@ -45,6 +50,12 @@ let rec fibm = function%monad
     x <- fibm (n - 2);
     y <- fibm (n - 1);
     return (x + y)
+
+(* Toplevel let *)
+let%monad f xs ys =
+  x <- xs;
+  y <- ys;
+  return (x + y)
 ```
 
 The transformation rule is very natural as follows.
