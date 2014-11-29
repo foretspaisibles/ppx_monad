@@ -23,6 +23,18 @@ let mapper _args =
         bind_exp
         ["", this.expr this e0;
          "", Exp.fun_ "" None (Pat.any ()) (compile_sequence this e1)]
+    | Pexp_let (rec_flag, bindings, e) ->
+      { e with
+        pexp_desc = Pexp_let (rec_flag,
+                              List.map (this.value_binding this) bindings,
+                              compile_sequence this e) }
+    | Pexp_letmodule (name, me, e) ->
+      { e with
+        pexp_desc = Pexp_letmodule (name, this.module_expr this me,
+                                    compile_sequence this e) }
+    | Pexp_open (override_flag, name, e) ->
+      { e with
+        pexp_desc = Pexp_open (override_flag, name, compile_sequence this e) }
     | _ ->
       this.expr this e
   in

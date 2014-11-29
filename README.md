@@ -40,7 +40,8 @@ end
 let f = fun%monad xs ys ->
   x <- xs;
   y <- ys;
-  return (x + y)
+  let z = x + y in
+  return z
 
 (* function *)
 let rec fibm = function%monad
@@ -53,15 +54,18 @@ let rec fibm = function%monad
 
 (* Toplevel let *)
 let%monad f xs ys =
+  let open List in
   x <- xs;
   y <- ys;
   return (x + y)
 ```
 
-The transformation rule is very natural as follows.
+The transformation function `f` transform sequence expressions as
+follows:
 
-1. `e; ...` turns into `e >>= fun _ -> ...`
-2. `v <- e; ...` turns into `e >>= fun v -> ...`
+1. `e0; e1` to `e0 >>= fun _ -> e1'` where `e1'` = `f e1`
+2. `v <- e0; e1` to `e >>= fun v -> e1'` where `e1'` = `f e1`
+3. `let ... in e` to `let ... in e'` where `e'` = `f e`
 
 ## Let monad syntax
 

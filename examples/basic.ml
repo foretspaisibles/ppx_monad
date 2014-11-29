@@ -34,7 +34,8 @@ let () =
   let f = fun%monad xs ys ->
     x <- xs;
     y <- ys;
-    return (x + y)
+    let z = x + y in
+    return z
   in
   output (f [1; 2; 3] [3; 4; 5])
 
@@ -53,9 +54,8 @@ let () =
 
 (* Toplevel let *)
 module M = struct
-  open List_monad
-
   let%monad f xs ys =
+    let open List_monad in
     x <- xs;
     y <- ys;
     return (x + y)
