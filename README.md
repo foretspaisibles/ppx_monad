@@ -11,23 +11,40 @@ e2`) with `[%monad ...]` extension.
 
 ```OCaml
 [%monad
-  a <- [1; 2; 3];
-  b <- [3; 4; 5];
-  return (a + b)]
+  x <- [1; 2; 3];
+  y <- [3; 4; 5];
+  return (x + y) ]
 ```
 
 `v <- e` binds a monadic value of `e` to a variable `v`.  Compared to
 Haskell monad syntax, there is a serious limitation that you cannot
 put a pattern in the place of `v`.
 
-Sequence expressions in `begin ... end` are also supported.
+Sequence expressions in `begin ... end`, `fun` and `function` are also
+supported.
 
 ```OCaml
+(* begin ... end *)
 begin%monad
-  a <- [1; 2; 3];
-  b <- [3; 4; 5];
-  return (a + b)
+  x <- [1; 2; 3];
+  y <- [3; 4; 5];
+  return (x + y)
 end
+
+(* fun *)
+let f = fun%monad xs ys ->
+  x <- xs;
+  y <- ys;
+  return (x + y)
+
+(* function *)
+let rec fibm = function%monad
+  | 0 -> return 0
+  | 1 -> return 1
+  | n ->
+    x <- fibm (n - 2);
+    y <- fibm (n - 1);
+    return (x + y)
 ```
 
 The transformation rule is very natural as follows.

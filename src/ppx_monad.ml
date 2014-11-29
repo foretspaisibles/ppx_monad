@@ -13,14 +13,16 @@ let mapper _args =
   let bind_exp = (Exp.ident { txt = Lident ">>="; loc = Location.none }) in
   let super = default_mapper in
   let rec compile_sequence this e = match e.pexp_desc with
-    | Pexp_sequence ({ pexp_desc = Pexp_setinstvar (var, e1) }, e2) ->
+    | Pexp_sequence ({ pexp_desc = Pexp_setinstvar (var, e0) }, e1) ->
       Exp.apply
         bind_exp
-        ["", e1; "", Exp.fun_ "" None (Pat.var var) (compile_sequence this e2)]
-    | Pexp_sequence (e1, e2) ->
+        ["", this.expr this e0;
+         "", Exp.fun_ "" None (Pat.var var) (compile_sequence this e1)]
+    | Pexp_sequence (e0, e1) ->
       Exp.apply
         bind_exp
-        ["", e1; "", Exp.fun_ "" None (Pat.any ()) (compile_sequence this e2)]
+        ["", this.expr this e0;
+         "", Exp.fun_ "" None (Pat.any ()) (compile_sequence this e1)]
     | _ ->
       this.expr this e
   in
@@ -34,20 +36,29 @@ let mapper _args =
                compile_sequence this e
              | Pexp_let (_, bindings, e) ->
                List.fold_right
-                 (fun { pvb_pat = pat; pvb_expr = expr } acc ->
+                 (fun { pvb_pat = pat; pvb_expr = pe } acc ->
                     Exp.apply
                       bind_exp
-                      ["", expr; "", Exp.fun_ "" None pat acc])
+                      ["", this.expr this pe;
+                       "", Exp.fun_ "" None pat acc])
                  bindings
-                 e
-             | Pexp_fun (l, e0, pat, e) ->
-               { e with
-                 pexp_desc = Pexp_fun (l, Option.map (this.expr this) e0, pat, compile_sequence this e) }
+                 (this.expr this e)
+             | Pexp_fun _ ->
+               let rec loop e = match e.pexp_desc with
+                 | Pexp_fun (l, e0, pat, e1) ->
+                   { e with
+                     pexp_desc = Pexp_fun (l, Option.map (this.expr this) e0,
+                                           this.pat this pat, loop e1) }
+                 | _ ->
+                   compile_sequence this e
+               in loop e
              | Pexp_function cases ->
                { e with
                  pexp_desc = Pexp_function
                      (List.map
-                        (fun case -> { case with pc_rhs = compile_sequence this case.pc_rhs })
+                        (fun case -> { case with
+                                       pc_guard = Option.map (this.expr this) case.pc_guard;
+                                       pc_rhs = compile_sequence this case.pc_rhs })
                         cases) }
              | _ ->
                this.expr this e
