@@ -4,26 +4,29 @@ module List_monad = struct
 end
 
 let () =
-  let result =
-    let open List_monad in
-    begin%monad
+  let output a = Format.printf "%d@." a in
+  let open List_monad in
+  List.iter
+    output
+    [%monad
       a <- [1; 2; 3];
       b <- [3; 4; 5];
-      return (a + b)
-    end
-  in
+      return (a + b) ];
   List.iter
-    (fun a -> Format.printf "%d@." a)
-    result
-
-let () =
-  let result =
-    let open List_monad in
-    let%monad
+    output
+    ((fun%monad () ->
+        a <- [1; 2; 3];
+        b <- [3; 4; 5];
+        return (a + b)) ());
+  List.iter
+    output
+    ((function%monad () ->
+        a <- [1; 2; 3];
+        b <- [3; 4; 5];
+        return (a + b)) ());
+  List.iter
+    output
+    (let%monad
       a, b = [1, 2; 3, 4] and
       c, d = [5, 6; 7, 8] in
-    return (a * c + b * d)
-  in
-  List.iter
-    (fun a -> Format.printf "%d@." a)
-    result
+     return (a * c + b * d))
