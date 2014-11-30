@@ -52,6 +52,19 @@ let () =
   in
   output (fibm 10)
 
+(* match *)
+let () =
+  let open List_monad in
+  let rec fibm n = match%monad n with
+    | 0 -> return 0
+    | 1 -> return 1
+    | _ ->
+      x <- fibm (n - 2);
+      y <- fibm (n - 1);
+      return (x + y)
+  in
+  output (fibm 10)
+
 (* Toplevel let *)
 module M = struct
   let%monad.List_monad f xs ys =

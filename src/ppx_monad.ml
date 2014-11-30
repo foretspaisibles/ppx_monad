@@ -102,6 +102,11 @@ let mapper _args =
     | _ ->
       compile_sequence this e
   in
+  let compile_case this case =
+    { case with
+      pc_guard = Option.map (this.expr this) case.pc_guard;
+      pc_rhs = compile_sequence this case.pc_rhs }
+  in
   { super with
     expr =
       (fun this e ->
@@ -124,12 +129,10 @@ let mapper _args =
                  compile_fun_seq this e
                | Pexp_function cases ->
                  { e with
-                   pexp_desc = Pexp_function
-                       (List.map
-                          (fun case -> { case with
-                                         pc_guard = Option.map (this.expr this) case.pc_guard;
-                                         pc_rhs = compile_sequence this case.pc_rhs })
-                          cases) }
+                   pexp_desc = Pexp_function (List.map (compile_case this) cases) }
+               | Pexp_match (e, cases) ->
+                 { e with
+                   pexp_desc = Pexp_match (this.expr this e, List.map (compile_case this) cases) }
                | _ ->
                  this.expr this e
            end

@@ -26,6 +26,7 @@ body.
 * `begin`
 * `fun`
 * `function`
+* `match`
 * Toplevel `let`
 
 ```OCaml
@@ -48,6 +49,15 @@ let rec fibm = function%monad
   | 0 -> return 0
   | 1 -> return 1
   | n ->
+    x <- fibm (n - 2);
+    y <- fibm (n - 1);
+    return (x + y)
+
+(* match *)
+let rec fibm n = match%monad n with
+  | 0 -> return 0
+  | 1 -> return 1
+  | _ ->
     x <- fibm (n - 2);
     y <- fibm (n - 1);
     return (x + y)
