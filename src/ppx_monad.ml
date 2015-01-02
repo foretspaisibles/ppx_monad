@@ -50,34 +50,42 @@ let mapper args =
   let open Longident in
   let open Ast_mapper in
   let open Ast_helper in
-  let with_monad_extension id f =
+  let with_monad_extension ?(loc = Location.none) id f =
     match parse_monad_extension_id id with
     | None ->
       f ()
     | Some lid ->
       Exp.let_
+        ~loc
         Nonrecursive
         [Vb.mk
-           (Pat.var { txt = ">>="; loc = Location.none })
-           (Exp.ident { txt = Ldot (lid, ">>="); loc = Location.none });
+           ~loc
+           (Pat.var ~loc { txt = ">>="; loc })
+           (Exp.ident ~loc { txt = Ldot (lid, ">>="); loc });
          Vb.mk
-           (Pat.var { txt = "return"; loc = Location.none })
-           (Exp.ident { txt = Ldot (lid, "return"); loc = Location.none })]
+           ~loc
+           (Pat.var ~loc { txt = "return"; loc })
+           (Exp.ident ~loc { txt = Ldot (lid, "return"); loc })]
         (f ())
   in
-  let bind e0 e1 =
+  let bind ?(loc = Location.none) e0 e1 =
     Exp.apply
-      (Exp.ident { txt = Lident ">>="; loc = Location.none })
+      ~loc
+      (Exp.ident ~loc { txt = Lident ">>="; loc })
       ["", e0; "", e1]
   in
   let super = default_mapper in
   let rec compile_sequence this e = match e.pexp_desc with
-    | Pexp_sequence ({ pexp_desc = Pexp_setinstvar (var, e0) }, e1) ->
+    | Pexp_sequence ({ pexp_desc = Pexp_setinstvar (var, e0); pexp_loc = var_loc }, e1) ->
       bind
+        ~loc:e.pexp_loc
         (this.expr this e0)
-        (Exp.fun_ "" None (Pat.var var) (compile_sequence this e1))
+        (Exp.fun_ ~loc:e.pexp_loc "" None
+           (Pat.var ~loc:var_loc var)
+           (compile_sequence this e1))
     | Pexp_sequence (e0, e1) ->
       bind
+        ~loc:e.pexp_loc
         (this.expr this e0)
         (Exp.fun_ "" None
            (if strict_sequence
@@ -116,16 +124,17 @@ let mapper args =
     expr =
       (fun this e ->
          match e.pexp_desc with
-         | Pexp_extension ({ txt = id }, PStr [{ pstr_desc = Pstr_eval (e, _) }])
+         | Pexp_extension ({ txt = id; loc }, PStr [{ pstr_desc = Pstr_eval (e, _) }])
            when is_monad_extension_id id ->
-           with_monad_extension id begin fun () ->
+           with_monad_extension ~loc id begin fun () ->
              match e.pexp_desc with
                | Pexp_sequence _ ->
                  compile_sequence this e
                | Pexp_let (_, bindings, e) ->
                  List.fold_right
-                   (fun { pvb_pat = pat; pvb_expr = pe } acc ->
+                   (fun { pvb_pat = pat; pvb_expr = pe; pvb_loc = loc } acc ->
                       bind
+                        ~loc
                         (this.expr this pe)
                         (Exp.fun_ "" None pat acc))
                    bindings
@@ -146,11 +155,11 @@ let mapper args =
     structure_item =
       (fun this s ->
          match s.pstr_desc with
-         | Pstr_extension (({ txt = id }, PStr [{ pstr_desc = Pstr_value (rec_flag, bindings) }]), _)
+         | Pstr_extension (({ txt = id; loc }, PStr [{ pstr_desc = Pstr_value (rec_flag, bindings) }]), _)
            when is_monad_extension_id id ->
            let bindings =
              List.map
-               (fun b -> { b with pvb_expr = with_monad_extension id (fun () -> compile_fun_seq this b.pvb_expr) })
+               (fun b -> { b with pvb_expr = with_monad_extension ~loc id (fun () -> compile_fun_seq this b.pvb_expr) })
                bindings
            in
            { s with
