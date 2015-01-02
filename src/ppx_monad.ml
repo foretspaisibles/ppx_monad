@@ -43,7 +43,8 @@ let parse_monad_extension_id id =
     in Some lid
   else None
 
-let mapper _args =
+let mapper args =
+  let strict_sequence = not (List.mem "--no-strict-sequence" args) in
   let open Asttypes in
   let open Parsetree in
   let open Longident in
@@ -78,7 +79,11 @@ let mapper _args =
     | Pexp_sequence (e0, e1) ->
       bind
         (this.expr this e0)
-        (Exp.fun_ "" None (Pat.any ()) (compile_sequence this e1))
+        (Exp.fun_ "" None
+           (if strict_sequence
+            then Pat.construct { txt = Lident "()"; loc = Location.none } None
+            else Pat.any ())
+           (compile_sequence this e1))
     | Pexp_let (rec_flag, bindings, e) ->
       { e with
         pexp_desc = Pexp_let (rec_flag,
